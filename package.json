@@ -1,6 +1,6 @@
 {
   "name": "@soichiroota/jsklearn",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "This is a javascript sample library.",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
@@ -61,6 +61,8 @@
     "@types/node": "^16.6.1",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-jest": "^23.4.2",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "jest": "^27.0.6",

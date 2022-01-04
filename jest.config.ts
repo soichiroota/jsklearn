@@ -8,6 +8,7 @@ const config: Config.InitialOptions = {
   testEnvironment: 'node',
   collectCoverage: true,
   errorOnDeprecated: true,
+  coverageProvider: 'v8',
 };
 
 // 設定を default エクスポートします

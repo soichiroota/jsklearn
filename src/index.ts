@@ -1,9 +1,5 @@
-import trim from './trim';
+import * as zeror from './zeror';
 
 export default {
-  trim: trim,
-};
-
-export const hello = (): void => {
-  console.log('Hello.');
+  zeror: zeror,
 };
