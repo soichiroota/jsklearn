@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import { transpose } from '@tensorflow/tfjs';
 
 export function generateData(numPoints: number, coeff: any, sigma = 0.04): any {
   return tf.tidy(() => {
@@ -9,7 +10,7 @@ export function generateData(numPoints: number, coeff: any, sigma = 0.04): any {
       tf.scalar(coeff.d),
     ];
 
-    const xs = tf.randomUniform([numPoints], -1, 1);
+    const xs = tf.randomUniform([numPoints, 1], -1, 1);
 
     // Generate polynomial data
     const three = tf.scalar(3, 'int32');
@@ -20,7 +21,7 @@ export function generateData(numPoints: number, coeff: any, sigma = 0.04): any {
       .add(d)
       // Add random noise to the generated data
       // to make the problem a bit more interesting
-      .add(tf.randomNormal([numPoints], 0, sigma));
+      .add(tf.randomNormal([numPoints, 1], 0, sigma));
 
     // Normalize the y values to the range 0 to 1.
     const ymin = ys.min();
@@ -29,7 +30,7 @@ export function generateData(numPoints: number, coeff: any, sigma = 0.04): any {
     const ysNormalized = ys.sub(ymin).div(yrange);
 
     return {
-      xs,
+      xs: xs,
       ys: ysNormalized,
     };
   });
