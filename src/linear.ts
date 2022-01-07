@@ -1,7 +1,8 @@
 import * as tf from '@tensorflow/tfjs';
-import { print } from '@tensorflow/tfjs';
 
-export class Linear {
+import { BaseEstimator } from './base';
+
+export class Linear extends BaseEstimator {
   epochs: number;
   earlyStopping: tf.EarlyStopping;
   model: tf.LayersModel | null;
@@ -22,6 +23,7 @@ export class Linear {
     batchSize = 1,
     metrics = null as string | string[] | null
   ) {
+    super();
     this.epochs = epochs;
     this.earlyStopping = earlyStopping
       ? (earlyStopping as tf.EarlyStopping)
@@ -60,7 +62,7 @@ export class Linear {
     return this;
   }
 
-  predict(x: tf.Tensor<tf.Rank> | tf.Tensor<tf.Rank>[]): tf.Tensor<tf.Rank> {
+  async predict(x: tf.Tensor<tf.Rank> | tf.Tensor<tf.Rank>[]): Promise<tf.Tensor<tf.Rank>> {
     if (this.model) {
       return this.model.predict(x) as tf.Tensor<tf.Rank>;
     }

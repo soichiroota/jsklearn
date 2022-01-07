@@ -13,7 +13,7 @@ describe('Linear regression test', (): void => {
     );
     const model: Linear = new Linear(1);
     await model.fit(xTrain, yTrain);
-    const result = model.predict(xTest);
+    const result = await model.predict(xTest);
     expect(result.shape[1]).toBe(1);
     const mse = (
       await tf.metrics.meanSquaredError(yTest, result).mean().buffer()
