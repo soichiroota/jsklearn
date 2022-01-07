@@ -8,15 +8,15 @@ describe('ZeroRule classification test', (): void => {
   test('predict', async (): Promise<void> => {
     const [xTrain, yTrain, xTest, yTest] = classificationData.getIrisData(0.15);
     const model: ZeroRule = new ZeroRule();
-    model.fit(null, yTrain);
-    const result = model.predict(xTest);
-    expect(result.shape[1]).toBe(3);
+    await model.fit(null, yTrain);
+    const result = await model.predict(xTest);
+    expect(result?.shape[1]).toBe(3);
   });
 
   test('toString', async (): Promise<void> => {
     const [xTrain, yTrain, xTest, yTest] = classificationData.getIrisData(0.15);
     const model: ZeroRule = new ZeroRule();
-    model.fit(null, yTrain);
+    await model.fit(null, yTrain);
     const result = model.toString();
     expect(result).toBe(model.r?.toString());
   });
@@ -31,15 +31,15 @@ describe('ZeroRule regression test', (): void => {
       0.15
     );
     const model: ZeroRule = new ZeroRule();
-    model.fit(null, yTrain);
-    const result = model.predict(xTest);
-    expect(result.shape[1]).toBe(1);
+    await model.fit(null, yTrain);
+    const result = await model.predict(xTest);
+    expect(result?.shape[1]).toBe(1);
   });
 
   test('toString', async (): Promise<void> => {
     const [xTrain, yTrain, xTest, yTest] = classificationData.getIrisData(0.15);
     const model: ZeroRule = new ZeroRule();
-    model.fit(null, yTrain);
+    await model.fit(null, yTrain);
     const result = model.toString();
     expect(result).toBe(model.r?.toString());
   });
