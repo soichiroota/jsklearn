@@ -23,7 +23,7 @@ export class ZeroRule extends BaseEstimator {
       const z = tf.zeros([x.shape[0], this.r.shape[0]]);
       return z.add(this.r);
     }
-    throw 'Property r is invalid.';
+    throw 'Model must be fitted.';
   }
 
   toString(): string {

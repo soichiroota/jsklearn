@@ -4,13 +4,13 @@ import { Linear } from '../src/linear';
 import * as regressionData from '../src/data/regression-data';
 
 describe('Linear regression test', (): void => {
+  const trueCoefficients = { a: -0.8, b: -0.2, c: 0.9, d: 0.5 };
+  const [xTrain, yTrain, xTest, yTest] = regressionData.getPolynomialData(
+    100,
+    trueCoefficients,
+    0.15
+  );
   test('predict', async (): Promise<void> => {
-    const trueCoefficients = { a: -0.8, b: -0.2, c: 0.9, d: 0.5 };
-    const [xTrain, yTrain, xTest, yTest] = regressionData.getPolynomialData(
-      100,
-      trueCoefficients,
-      0.15
-    );
     const model: Linear = new Linear(1);
     await model.fit(xTrain, yTrain);
     const result = await model.predict(xTest);
@@ -26,12 +26,6 @@ describe('Linear regression test', (): void => {
   });
 
   test('toString', async (): Promise<void> => {
-    const trueCoefficients = { a: -0.8, b: -0.2, c: 0.9, d: 0.5 };
-    const [xTrain, yTrain, xTest, yTest] = regressionData.getPolynomialData(
-      100,
-      trueCoefficients,
-      0.15
-    );
     const model: Linear = new Linear(1);
     await model.fit(xTrain, yTrain);
     const result = model.toString();

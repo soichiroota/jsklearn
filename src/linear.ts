@@ -62,7 +62,9 @@ export class Linear extends BaseEstimator {
     return this;
   }
 
-  async predict(x: tf.Tensor<tf.Rank> | tf.Tensor<tf.Rank>[]): Promise<tf.Tensor<tf.Rank>> {
+  async predict(
+    x: tf.Tensor<tf.Rank> | tf.Tensor<tf.Rank>[]
+  ): Promise<tf.Tensor<tf.Rank>> {
     if (this.model) {
       return this.model.predict(x) as tf.Tensor<tf.Rank>;
     }
@@ -72,8 +74,8 @@ export class Linear extends BaseEstimator {
   toString(): string {
     if (this.model) {
       const weights = this.model.getLayer(undefined, 1).getWeights();
-      return `Model:\n [${weights.toString()}]`;
+      return `[${weights.toString()}]`;
     }
-    return 'Model:\n null';
+    return 'null';
   }
 }
