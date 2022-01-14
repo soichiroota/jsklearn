@@ -3,6 +3,7 @@ import * as zeror from './zeror';
 import * as linear from './linear';
 import * as entropy from './dtree/entropy';
 import * as dstump from './dtree/dstump';
+import * as dtree from './dtree/dtree';
 
 export default {
   base: base,
@@ -10,4 +11,5 @@ export default {
   linear: linear,
   entropy: entropy,
   dstump: dstump,
+  dtree: dtree,
 };

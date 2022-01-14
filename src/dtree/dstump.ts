@@ -2,23 +2,27 @@ import * as tf from '@tensorflow/tfjs';
 
 import * as entropy from './entropy';
 import { ZeroRule } from '../zeror';
+import { Linear } from '../linear';
 import { BaseEstimator } from '../base';
 
 export class DecisionStump extends BaseEstimator {
-  leaf: any;
+  leaf: typeof ZeroRule | typeof Linear;
   metric: (y: tf.Tensor<tf.Rank>) => Promise<number>;
-  left: BaseEstimator | null;
-  right: BaseEstimator | null;
+  left: BaseEstimator;
+  right: BaseEstimator;
   featIndex: number;
   featVal: number;
   score: number;
 
-  constructor(metric = entropy.gini, leaf = ZeroRule as typeof BaseEstimator) {
+  constructor(
+    metric = entropy.gini,
+    leaf: typeof ZeroRule | typeof Linear = ZeroRule
+  ) {
     super();
     this.metric = metric;
     this.leaf = leaf;
-    this.left = null;
-    this.right = null;
+    this.left = new this.leaf();
+    this.right = new this.leaf();
     this.featIndex = 0;
     this.featVal = NaN;
     this.score = NaN;
@@ -30,8 +34,9 @@ export class DecisionStump extends BaseEstimator {
   ): Promise<[tf.Tensor<tf.Rank>, tf.Tensor<tf.Rank>]> {
     let left = tf.tensor(new Uint8Array());
     let right = tf.tensor(new Uint8Array());
+    const featArray = await feat.flatten().array();
     for (const i of [...Array(feat.shape[0]).keys()]) {
-      const v = (await feat.buffer()).get(i);
+      const v = featArray[i];
       if (v < val) {
         left = tf.concat([left, tf.tensor([i])]);
       } else {
@@ -65,7 +70,7 @@ export class DecisionStump extends BaseEstimator {
     let right = tf.tensor(new Uint8Array()).asType('int32');
     const x2d = x as tf.Tensor2D;
     for (const i of [...Array(x.shape[1]).keys()]) {
-      const feat = x2d.slice([0, i], [x2d.shape[0]]);
+      const feat = x2d.slice([0, i], [x2d.shape[0], 1]);
       for (const val of await feat.flatten().array()) {
         const [l, r] = await this.makeSplit(feat, val);
         const loss = await this.makeLoss(y.gather(l), y.gather(r));
@@ -86,23 +91,18 @@ export class DecisionStump extends BaseEstimator {
     x: tf.Tensor<tf.Rank>,
     y: tf.Tensor<tf.Rank>
   ): Promise<DecisionStump> {
-    this.left = new this.leaf();
-    this.right = new this.leaf();
     const [left, right] = await this.splitTree(x, y);
     if (left.shape[0] > 0) {
-      await this.left?.fit(x.gather(left), y.gather(left));
+      this.left = await this.left.fit(x.gather(left), y.gather(left));
     }
     if (right.shape[0] > 0) {
-      await this.right?.fit(x.gather(right), y.gather(right));
+      this.right = await this.right.fit(x.gather(right), y.gather(right));
     }
     return this;
   }
 
   async predict(x: tf.Tensor<tf.Rank>): Promise<tf.Tensor<tf.Rank>> {
-    if (this.left === null || this.right === null) {
-      throw 'Model must be fitted.';
-    }
-    const feat = x.slice([0, this.featIndex], [x.shape[0]]);
+    const feat = x.slice([0, this.featIndex], [x.shape[0], 1]);
     const val = this.featVal;
     const [l, r] = (await this.makeSplit(feat, val)) as [
       tf.Tensor1D,

@@ -1,16 +1,17 @@
 import * as tf from '@tensorflow/tfjs';
 
-import { DecisionStump } from '../../src/dtree/dstump';
+import { DecisionTree } from '../../src/dtree/dtree';
 import * as entropy from '../../src/dtree/entropy';
 import { Linear } from '../../src/linear';
 import * as classificationData from '../../src/data/classification-data';
 import * as regressionData from '../../src/data/regression-data';
+import { ZeroRule } from '../../src/zeror';
 
-describe('DecisionStump classification test', (): void => {
+describe('DecisionTree classification test', (): void => {
   const [xTrain, yTrain, xTest, yTest] = classificationData.getIrisData(0.15);
 
   test('predict with gini', async (): Promise<void> => {
-    const model: DecisionStump = new DecisionStump(entropy.gini);
+    const model: DecisionTree = new DecisionTree(2, entropy.gini, ZeroRule);
     await model.fit(xTrain, yTrain);
     const result = await model.predict(xTest);
     expect(result.shape[1]).toBe(3);
@@ -21,15 +22,24 @@ describe('DecisionStump classification test', (): void => {
   });
 
   test('toString with gini', async (): Promise<void> => {
-    const model: DecisionStump = new DecisionStump(entropy.gini);
+    const model: DecisionTree = new DecisionTree(2, entropy.gini, ZeroRule);
     await model.fit(xTrain, yTrain);
     const result = model.toString();
     expect(result).toContain('Tensor');
     console.log(result);
   });
 
+  test('splitTree with gini', async (): Promise<void> => {
+    const model: DecisionTree = new DecisionTree(2, entropy.gini, ZeroRule);
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(expected).toBe(result);
+  });
+
   test('predict with infgain', async (): Promise<void> => {
-    const model: DecisionStump = new DecisionStump(entropy.infgain);
+    const model: DecisionTree = new DecisionTree(2, entropy.infgain, ZeroRule);
     await model.fit(xTrain, yTrain);
     const result = await model.predict(xTest);
     expect(result.shape[1]).toBe(3);
@@ -40,23 +50,33 @@ describe('DecisionStump classification test', (): void => {
   });
 
   test('toString with infgain', async (): Promise<void> => {
-    const model: DecisionStump = new DecisionStump(entropy.infgain);
+    const model: DecisionTree = new DecisionTree(2, entropy.infgain, ZeroRule);
     await model.fit(xTrain, yTrain);
     const result = model.toString();
     expect(result).toContain('Tensor');
     console.log(result);
   });
+
+  test('splitTree with infgain', async (): Promise<void> => {
+    const model: DecisionTree = new DecisionTree(2, entropy.infgain, ZeroRule);
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(expected).toBe(result);
+  });
 });
 
-describe('DecisionStump regression test', (): void => {
+describe('DecisionTree regression test', (): void => {
   const trueCoefficients = { a: -0.8, b: -0.2, c: 0.9, d: 0.5 };
   const [xTrain, yTrain, xTest, yTest] = regressionData.getPolynomialData(
     100,
     trueCoefficients,
     0.15
   );
+
   test('predict', async (): Promise<void> => {
-    const model: DecisionStump = new DecisionStump(entropy.deviation, Linear);
+    const model: DecisionTree = new DecisionTree(2, entropy.deviation, Linear);
     await model.fit(xTrain, yTrain);
     const result = await model.predict(xTest);
     expect(result.shape[1]).toBe(1);
@@ -71,10 +91,19 @@ describe('DecisionStump regression test', (): void => {
   });
 
   test('toString', async (): Promise<void> => {
-    const model: DecisionStump = new DecisionStump(entropy.deviation, Linear);
+    const model: DecisionTree = new DecisionTree(2, entropy.deviation, Linear);
     await model.fit(xTrain, yTrain);
     const result = model.toString();
     expect(result).toContain('Tensor');
     console.log(result);
+  });
+
+  test('splitTree', async (): Promise<void> => {
+    const model: DecisionTree = new DecisionTree(2, entropy.deviation, Linear);
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(expected).toBe(result);
   });
 });
