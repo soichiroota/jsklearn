@@ -105,7 +105,6 @@ export class DecisionTree extends DecisionStump {
         right.push(i);
       }
     }
-    console.log(right);
     return [tf.tensor(left).asType('int32'), tf.tensor(right).asType('int32')];
   }
 
