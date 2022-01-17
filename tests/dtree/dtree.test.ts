@@ -31,16 +31,11 @@ describe('DecisionTree classification test', (): void => {
 
   test('splitTree with gini', async (): Promise<void> => {
     const model: DecisionTree = new DecisionTree(2, entropy.gini, ZeroRule);
-    const [expectedLeft, expectedRight] = await model.splitTreeSlow(
-      xTest,
-      yTest
-    );
-    const [resultLeft, resultRight] = await model.splitTree(xTest, yTest);
-    console.log(
-      `expectedLeft = ${expectedLeft}, resultLeft = ${resultLeft}\nexpectedRight = ${expectedRight}, resultRight = ${resultRight}\n`
-    );
-    expect(await resultLeft.array()).toEqual(await expectedLeft.array());
-    expect(await resultRight.array()).toEqual(await expectedRight.array());
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(result).toEqual(expected);
   });
 
   test('predict with infgain', async (): Promise<void> => {
@@ -64,16 +59,11 @@ describe('DecisionTree classification test', (): void => {
 
   test('splitTree with infgain', async (): Promise<void> => {
     const model: DecisionTree = new DecisionTree(2, entropy.infgain, ZeroRule);
-    const [expectedLeft, expectedRight] = await model.splitTreeSlow(
-      xTest,
-      yTest
-    );
-    const [resultLeft, resultRight] = await model.splitTree(xTest, yTest);
-    console.log(
-      `expectedLeft = ${expectedLeft}, resultLeft = ${resultLeft}\nexpectedRight = ${expectedRight}, resultRight = ${resultRight}\n`
-    );
-    expect(await resultLeft.array()).toEqual(await expectedLeft.array());
-    expect(await resultRight.array()).toEqual(await expectedRight.array());
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(result).toEqual(expected);
   });
 });
 
@@ -110,15 +100,10 @@ describe('DecisionTree regression test', (): void => {
 
   test('splitTree', async (): Promise<void> => {
     const model: DecisionTree = new DecisionTree(2, entropy.deviation, Linear);
-    const [expectedLeft, expectedRight] = await model.splitTreeSlow(
-      xTest,
-      yTest
-    );
-    const [resultLeft, resultRight] = await model.splitTree(xTest, yTest);
-    console.log(
-      `expectedLeft = ${expectedLeft}, resultLeft = ${resultLeft}\nexpectedRight = ${expectedRight}, resultRight = ${resultRight}\n`
-    );
-    expect(await resultLeft.array()).toEqual(await expectedLeft.array());
-    expect(await resultRight.array()).toEqual(await expectedRight.array());
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(result).toEqual(expected);
   });
 });
