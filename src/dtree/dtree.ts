@@ -38,61 +38,43 @@ export class DecisionTree extends DecisionStump {
     this.featIndex = 0;
     this.featVal = Infinity;
     let score = Infinity;
-    const ytil = y.clone() as tf.Tensor2D;
     const x2d = x as tf.Tensor2D;
-    const x2dArray = await x2d.array();
-    const xindexArray = [] as number[][];
+    const y2d = y as tf.Tensor2D;
+    const xindex = tf.topk(x.transpose(), x.shape[0]).indices.transpose();
+    const ysotArray: tf.Tensor<tf.Rank>[] = [];
     for (const i of [...Array(x2d.shape[1]).keys()]) {
-      xindexArray.push(
-        argsort(await x2d.slice([0, i], [x2d.shape[0], 1]).array())
-      );
+      ysotArray.push(y.gather(xindex.gather(i, 1)));
     }
-    const ysotArray = (await tf
-      .zeros([x2d.shape[0], x2d.shape[1], ytil.shape[1]])
-      .array()) as number[][][];
-    const ytilArray = await ytil.array();
-    for (const i of [...Array(x2d.shape[1]).keys()]) {
-      for (const j of [...Array(x2d.shape[0]).keys()]) {
-        ysotArray[j][i] = ytilArray[xindexArray[i][j]];
-      }
-    }
-    const ysot = tf.tensor(ysotArray);
+    const ysot = tf
+      .stack(ysotArray, 1)
+      .reshape([x2d.shape[0], x2d.shape[1], y2d.shape[1]]);
+    const xindexArray = await xindex.as2D(x2d.shape[0], x2d.shape[1]).array();
+    const xArray = await x2d.array();
     for (const f of [...Array(x.shape[0]).keys()]) {
-      if (f > 0) {
-        const ly = ysot.slice([0, 0], [f, x2d.shape[1]]) as tf.Tensor2D;
-        const ry = ysot.slice(
-          [f, 0],
-          [ysot.shape[0] - f, x2d.shape[1]]
-        ) as tf.Tensor2D;
-        const loss = [] as number[];
-
-        for (const yp of [...Array(x2d.shape[1]).keys()]) {
-          if (
-            x
-              .slice(xindexArray[yp][f - 1], [1, 1])
-              .notEqual(x.slice(xindexArray[yp][f], [1, 1]))
-          ) {
-            loss.push(
-              await this.makeLoss(
-                ly.slice([0, yp], [ly.shape[0], 1]),
-                ry.slice([0, yp], [ry.shape[0], 1])
-              )
-            );
-          } else {
-            loss.push(Infinity);
-          }
+      const ly = ysot.slice(0, f);
+      const ry = ysot.slice(f);
+      const loss = [] as number[];
+      for (const yp of [...Array(x2d.shape[1]).keys()]) {
+        if (f === 0) {
+          loss.push(Infinity);
+        } else if (
+          xArray[xindexArray[f - 1][yp]][yp] !== xArray[xindexArray[f][yp]][yp]
+        ) {
+          loss.push(await this.makeLoss(ly.gather(yp, 1), ry.gather(yp, 1)));
+        } else {
+          loss.push(Infinity);
         }
-        const i = (await tf.argMin(tf.tensor1d(loss)).buffer()).get(0);
-        if (score > loss[i]) {
-          score = loss[i];
-          this.featIndex = i;
-          this.featVal = x2dArray[xindexArray[i][f]][i];
-        }
+      }
+      const i = (await tf.argMin(tf.tensor1d(loss)).buffer()).get(0);
+      if (score > loss[i]) {
+        score = loss[i];
+        this.featIndex = i;
+        this.featVal = xArray[xindexArray[f][i]][i];
       }
     }
 
     const filter = await x
-      .slice([0, this.featIndex], [x2d.shape[0], 1])
+      .gather(this.featIndex, 1)
       .less(this.featVal)
       .flatten()
       .array();
@@ -105,6 +87,7 @@ export class DecisionTree extends DecisionStump {
         right.push(i);
       }
     }
+    this.score = score;
     return [tf.tensor(left).asType('int32'), tf.tensor(right).asType('int32')];
   }
 
@@ -126,8 +109,6 @@ export class DecisionTree extends DecisionStump {
     x: tf.Tensor<tf.Rank>,
     y: tf.Tensor<tf.Rank>
   ): Promise<DecisionTree> {
-    this.left = new this.leaf();
-    this.right = new this.leaf();
     const [left, right] = await this.splitTree(x, y);
     if (this.depth < this.maxDepth) {
       if (left.shape[0] > 0) {
@@ -151,9 +132,10 @@ export class DecisionTree extends DecisionStump {
           (await y2d.slice([i, 0], [1, y2d.shape[1]]).array())[0]
         );
       }
-      this.left = this.left
-        ? await this.left.fit(tf.tensor(xLeftArray), tf.tensor(yLeftArray))
-        : null;
+      this.left = await this.left.fit(
+        tf.tensor(xLeftArray),
+        tf.tensor(yLeftArray)
+      );
     }
     if (right.shape[0] > 0) {
       const rightArray = await right.flatten().array();
@@ -167,9 +149,10 @@ export class DecisionTree extends DecisionStump {
           (await y2d.slice([i, 0], [1, y2d.shape[1]]).array())[0]
         );
       }
-      this.right = this.right
-        ? await this.right.fit(tf.tensor(xRightArray), tf.tensor(yRightArray))
-        : null;
+      this.right = await this.right.fit(
+        tf.tensor(xRightArray),
+        tf.tensor(yRightArray)
+      );
     }
     return this;
   }
