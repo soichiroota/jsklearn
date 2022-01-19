@@ -6,7 +6,7 @@ import { Linear } from '../linear';
 import { BaseEstimator } from '../base';
 
 export class DecisionStump extends BaseEstimator {
-  leaf: any;
+  leaf: typeof ZeroRule | typeof Linear;
   metric: (y: tf.Tensor<tf.Rank>) => Promise<number>;
   left: BaseEstimator | null;
   right: BaseEstimator | null;
