@@ -6,6 +6,7 @@ import { Linear } from '../../src/linear';
 import * as classificationData from '../../src/data/classification-data';
 import * as regressionData from '../../src/data/regression-data';
 import { ZeroRule } from '../../src/zeror';
+import exp from 'constants';
 
 describe('DecisionTree classification test', (): void => {
   const [xTrain, yTrain, xTest, yTest] = classificationData.getIrisData(0.15);
@@ -31,16 +32,11 @@ describe('DecisionTree classification test', (): void => {
 
   test('splitTree with gini', async (): Promise<void> => {
     const model: DecisionTree = new DecisionTree(2, entropy.gini, ZeroRule);
-    const [expectedLeft, expectedRight] = await model.splitTreeSlow(
-      xTest,
-      yTest
-    );
-    const [resultLeft, resultRight] = await model.splitTree(xTest, yTest);
-    console.log(
-      `expectedLeft = ${expectedLeft}, resultLeft = ${resultLeft}\nexpectedRight = ${expectedRight}, resultRight = ${resultRight}\n`
-    );
-    expect(await resultLeft.array()).toEqual(await expectedLeft.array());
-    expect(await resultRight.array()).toEqual(await expectedRight.array());
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(result).toBe(expected);
   });
 
   test('predict with infgain', async (): Promise<void> => {
@@ -64,16 +60,11 @@ describe('DecisionTree classification test', (): void => {
 
   test('splitTree with infgain', async (): Promise<void> => {
     const model: DecisionTree = new DecisionTree(2, entropy.infgain, ZeroRule);
-    const [expectedLeft, expectedRight] = await model.splitTreeSlow(
-      xTest,
-      yTest
-    );
-    const [resultLeft, resultRight] = await model.splitTree(xTest, yTest);
-    console.log(
-      `expectedLeft = ${expectedLeft}, resultLeft = ${resultLeft}\nexpectedRight = ${expectedRight}, resultRight = ${resultRight}\n`
-    );
-    expect(await resultLeft.array()).toEqual(await expectedLeft.array());
-    expect(await resultRight.array()).toEqual(await expectedRight.array());
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(result).toBe(expected);
   });
 });
 
@@ -110,15 +101,10 @@ describe('DecisionTree regression test', (): void => {
 
   test('splitTree', async (): Promise<void> => {
     const model: DecisionTree = new DecisionTree(2, entropy.deviation, Linear);
-    const [expectedLeft, expectedRight] = await model.splitTreeSlow(
-      xTest,
-      yTest
-    );
-    const [resultLeft, resultRight] = await model.splitTree(xTest, yTest);
-    console.log(
-      `expectedLeft = ${expectedLeft}, resultLeft = ${resultLeft}\nexpectedRight = ${expectedRight}, resultRight = ${resultRight}\n`
-    );
-    expect(await resultLeft.array()).toEqual(await expectedLeft.array());
-    expect(await resultRight.array()).toEqual(await expectedRight.array());
+    await model.splitTreeSlow(xTest, yTest);
+    const expected = model.score;
+    await model.splitTree(xTest, yTest);
+    const result = model.score;
+    expect(result).toBe(expected);
   });
 });
