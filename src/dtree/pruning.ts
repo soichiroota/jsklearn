@@ -15,12 +15,6 @@ export async function reduceerror(
     const feat = x.slice([0, node.featIndex], [x.shape[0], 1]);
     const val = node.featVal;
     const [l, r] = await node.makeSplit(feat, val);
-    if (node.left === null) {
-      throw 'node.left is null';
-    }
-    if (node.right === null) {
-      throw 'node.right is null';
-    }
     if (val === Infinity || r.shape[0] === 0) {
       return await reduceerror(node.left, x, y);
     } else if (l.shape[0] === 0) {
@@ -54,16 +48,10 @@ export async function reduceerror(
   return node;
 }
 
-export function getscore(node: BaseEstimator, score: tf.Tensor<tf.Rank>): void {
+export function getscore(node: BaseEstimator, score: number[]): void {
   if (node instanceof PrunedTree) {
     if (node.score >= 0 && node.score !== Infinity) {
-      score = tf.stack([score, node.score]);
-    }
-    if (node.left === null) {
-      throw 'node.left is null';
-    }
-    if (node.right === null) {
-      throw 'node.right is null';
+      score = score.concat([node.score]);
     }
     getscore(node.left, score);
     getscore(node.right, score);
@@ -75,12 +63,6 @@ export function criticalscore(
   scoreMax: number
 ): BaseEstimator {
   if (node instanceof PrunedTree) {
-    if (node.left === null) {
-      throw 'node.left is null';
-    }
-    if (node.right === null) {
-      throw 'node.right is null';
-    }
     node.left = criticalscore(node.left, scoreMax);
     node.right = criticalscore(node.right, scoreMax);
     if (node.score > scoreMax) {
@@ -99,7 +81,7 @@ export function criticalscore(
       ) {
         return node.left;
       } else {
-        node.right;
+        return node.right;
       }
     }
   }
@@ -142,30 +124,28 @@ export class PrunedTree extends DecisionTree {
     );
   }
 
-  async fitLeaf(x: tf.Tensor<tf.Rank>, y: tf.Tensor<tf.Rank>): Promise<void> {
+  async fitLeaf(
+    x: tf.Tensor<tf.Rank>,
+    y: tf.Tensor<tf.Rank>
+  ): Promise<PrunedTree> {
     const feat = x.slice([0, this.featIndex], [x.shape[0], 1]);
     const val = this.featVal;
     const [l, r] = await this.makeSplit(feat, val);
     if (l.shape[0] > 0) {
       if (this.left instanceof PrunedTree) {
-        await this.left.fitLeaf(x.gather(l), y.gather(l));
+        this.left = await this.left.fitLeaf(x.gather(l), y.gather(l));
       } else {
-        if (this.left === null) {
-          throw 'Left is null';
-        }
         this.left = await this.left.fit(x.gather(l), y.gather(l));
       }
     }
     if (r.shape[0] > 0) {
       if (this.right instanceof PrunedTree) {
-        await this.right.fitLeaf(x.gather(r), y.gather(r));
+        this.right = await this.right.fitLeaf(x.gather(r), y.gather(r));
       } else {
-        if (this.right === null) {
-          throw 'Right is null';
-        }
         this.right = await this.right.fit(x.gather(r), y.gather(r));
       }
     }
+    return this;
   }
 
   getDataForPruning(
@@ -210,15 +190,9 @@ export class PrunedTree extends DecisionTree {
     }
     if (this.depth < this.maxDepth || this.prunfnc !== 'critical') {
       if (left.shape[0] > 0) {
-        if (this.left === null) {
-          throw 'Left is null';
-        }
         this.left = await this.left.fit(xNew.gather(left), yNew.gather(left));
       }
       if (right.shape[0] > 0) {
-        if (this.right === null) {
-          throw 'Right is null';
-        }
         this.right = await this.right.fit(
           xNew.gather(right),
           yNew.gather(right)
@@ -230,14 +204,14 @@ export class PrunedTree extends DecisionTree {
       if (this.prunfnc === 'reduce') {
         await reduceerror(this, xT, yT);
       } else if (this.prunfnc === 'critical') {
-        const score = tf.tensor([]);
+        const score: number[] = [];
         getscore(this, score);
-        if (score.shape[0] > 0) {
-          const i = Math.round(score.shape[0] * this.critical);
-          const sortedScore = tf.topk(score, score.shape[0], true);
+        if (score.length > 0) {
+          const i = Math.round(score.length * this.critical);
+          const sortedScore = tf.topk(score, score.length, true);
           const scoreMax = (
             await sortedScore.values
-              .slice(Math.min(i, score.shape[0] - 1), 1)
+              .slice(Math.min(i, score.length - 1), 1)
               .buffer()
           ).get(0);
           criticalscore(this, scoreMax);

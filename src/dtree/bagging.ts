@@ -5,18 +5,22 @@ import { DecisionTree } from './dtree';
 import { PrunedTree } from './pruning';
 import { ZeroRule } from '../zeror';
 import * as entropy from './entropy';
+import { RandomTree } from './randomforest';
 
 export class Bagging extends BaseEstimator {
   nTrees: number;
   ratio: number;
-  tree: typeof DecisionTree | typeof PrunedTree;
+  tree: typeof DecisionTree | typeof PrunedTree | typeof RandomTree;
   treeParams: any;
   trees: BaseEstimator[];
 
   constructor(
     nTrees = 5,
     ratio = 1.0,
-    tree: typeof DecisionTree | typeof PrunedTree = PrunedTree,
+    tree:
+      | typeof DecisionTree
+      | typeof PrunedTree
+      | typeof RandomTree = PrunedTree,
     treeParams: any = null
   ) {
     super();
@@ -39,23 +43,32 @@ export class Bagging extends BaseEstimator {
       const allIndex = [...Array(x.shape[0]).keys()];
       tf.util.shuffle(allIndex);
       const index = tf.tensor(allIndex).slice(0, nSample).asType('int32');
-      const tree =
-        this.tree === PrunedTree
-          ? new this.tree(
-              this.treeParams.prunfnc,
-              this.treeParams.pruntest,
-              this.treeParams.splitratio,
-              this.treeParams.critical,
-              this.treeParams.maxDepth,
-              this.treeParams.metric,
-              this.treeParams.leaf
-            )
-          : new this.tree(
-              this.treeParams.maxDepth,
-              this.treeParams.metric,
-              this.treeParams.leaf
-            );
-      await tree.fit(x.gather(index), y.gather(index));
+      let tree;
+      if (this.tree === PrunedTree) {
+        tree = new this.tree(
+          this.treeParams.prunfnc,
+          this.treeParams.pruntest,
+          this.treeParams.splitratio,
+          this.treeParams.critical,
+          this.treeParams.maxDepth,
+          this.treeParams.metric,
+          this.treeParams.leaf
+        );
+      } else if (this.tree === RandomTree) {
+        tree = new this.tree(
+          this.treeParams.features,
+          this.treeParams.maxDepth,
+          this.treeParams.metric,
+          this.treeParams.leaf
+        );
+      } else {
+        tree = new this.tree(
+          this.treeParams.maxDepth,
+          this.treeParams.metric,
+          this.treeParams.leaf
+        );
+      }
+      tree = await tree.fit(x.gather(index), y.gather(index));
       this.trees = this.trees.concat([tree]);
     }
     return this;

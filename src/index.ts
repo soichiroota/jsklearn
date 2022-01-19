@@ -3,9 +3,10 @@ import * as zeror from './zeror';
 import * as linear from './linear';
 import * as entropy from './dtree/entropy';
 import * as dstump from './dtree/dstump';
-import * as dtree from './dtree/dree';
+import * as dtree from './dtree/dtree';
 import * as pruning from './dtree/pruning';
 import * as bagging from './dtree/bagging';
+import * as randomforest from './dtree/randomforest';
 
 export default {
   base: base,
@@ -15,4 +16,6 @@ export default {
   dstump: dstump,
   dtree: dtree,
   pruning: pruning,
+  bagging: bagging,
+  randomforest: randomforest,
 };
