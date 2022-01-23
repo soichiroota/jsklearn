@@ -7,6 +7,7 @@ import * as dtree from './dtree/dtree';
 import * as pruning from './dtree/pruning';
 import * as bagging from './dtree/bagging';
 import * as randomforest from './dtree/randomforest';
+import * as adaboostM1 from './dtree/boosting/adaboost-m1';
 
 export default {
   base: base,
@@ -18,4 +19,5 @@ export default {
   pruning: pruning,
   bagging: bagging,
   randomforest: randomforest,
+  adaboostM1: adaboostM1,
 };

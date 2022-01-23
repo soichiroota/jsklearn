@@ -126,23 +126,40 @@ export class PrunedTree extends DecisionTree {
 
   async fitLeaf(
     x: tf.Tensor<tf.Rank>,
-    y: tf.Tensor<tf.Rank>
+    y: tf.Tensor<tf.Rank>,
+    weight?: tf.Tensor<tf.Rank>
   ): Promise<PrunedTree> {
     const feat = x.slice([0, this.featIndex], [x.shape[0], 1]);
     const val = this.featVal;
     const [l, r] = await this.makeSplit(feat, val);
     if (l.shape[0] > 0) {
       if (this.left instanceof PrunedTree) {
-        this.left = await this.left.fitLeaf(x.gather(l), y.gather(l));
+        this.left = await this.left.fitLeaf(
+          x.gather(l),
+          y.gather(l),
+          weight?.gather(l)
+        );
       } else {
-        this.left = await this.left.fit(x.gather(l), y.gather(l));
+        this.left = await this.left.fit(
+          x.gather(l),
+          y.gather(l),
+          weight?.gather(l)
+        );
       }
     }
     if (r.shape[0] > 0) {
       if (this.right instanceof PrunedTree) {
-        this.right = await this.right.fitLeaf(x.gather(r), y.gather(r));
+        this.right = await this.right.fitLeaf(
+          x.gather(r),
+          y.gather(r),
+          weight?.gather(r)
+        );
       } else {
-        this.right = await this.right.fit(x.gather(r), y.gather(r));
+        this.right = await this.right.fit(
+          x.gather(r),
+          y.gather(r),
+          weight?.gather(r)
+        );
       }
     }
     return this;
@@ -174,7 +191,11 @@ export class PrunedTree extends DecisionTree {
     return [xT, yT, x, y];
   }
 
-  async fit(x: tf.Tensor<tf.Rank>, y: tf.Tensor<tf.Rank>): Promise<PrunedTree> {
+  async fit(
+    x: tf.Tensor<tf.Rank>,
+    y: tf.Tensor<tf.Rank>,
+    weight?: tf.Tensor<tf.Rank>
+  ): Promise<PrunedTree> {
     const [xT, yT, xNew, yNew] = this.getDataForPruning(x, y);
 
     this.left = new this.leaf();
@@ -190,12 +211,17 @@ export class PrunedTree extends DecisionTree {
     }
     if (this.depth < this.maxDepth || this.prunfnc !== 'critical') {
       if (left.shape[0] > 0) {
-        this.left = await this.left.fit(xNew.gather(left), yNew.gather(left));
+        this.left = await this.left.fit(
+          xNew.gather(left),
+          yNew.gather(left),
+          weight?.gather(left)
+        );
       }
       if (right.shape[0] > 0) {
         this.right = await this.right.fit(
           xNew.gather(right),
-          yNew.gather(right)
+          yNew.gather(right),
+          weight?.gather(right)
         );
       }
     }
@@ -216,7 +242,7 @@ export class PrunedTree extends DecisionTree {
           ).get(0);
           criticalscore(this, scoreMax);
         }
-        await this.fitLeaf(x, y);
+        await this.fitLeaf(x, y, weight);
       }
     }
 

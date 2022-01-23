@@ -4,7 +4,6 @@ import { DecisionStump } from './dstump';
 import * as entropy from './entropy';
 import { ZeroRule } from '../zeror';
 import { BaseEstimator } from '../base';
-import { argsort } from '../numjs';
 import { Linear } from '../linear';
 
 export class DecisionTree extends DecisionStump {
@@ -51,6 +50,8 @@ export class DecisionTree extends DecisionStump {
     const xindexArray = await xindex.as2D(x2d.shape[0], x2d.shape[1]).array();
     const xArray = await x2d.array();
     for (const f of [...Array(x.shape[0]).keys()]) {
+      const l = xindex.slice(0, f);
+      const r = xindex.slice(f);
       const ly = ysot.slice(0, f);
       const ry = ysot.slice(f);
       const loss = [] as number[];
@@ -60,7 +61,14 @@ export class DecisionTree extends DecisionStump {
         } else if (
           xArray[xindexArray[f - 1][yp]][yp] !== xArray[xindexArray[f][yp]][yp]
         ) {
-          loss.push(await this.makeLoss(ly.gather(yp, 1), ry.gather(yp, 1)));
+          loss.push(
+            await this.makeLoss(
+              ly.gather(yp, 1),
+              ry.gather(yp, 1),
+              l.gather(yp, 1),
+              r.gather(yp, 1)
+            )
+          );
         } else {
           loss.push(Infinity);
         }
