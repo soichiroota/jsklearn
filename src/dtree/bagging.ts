@@ -38,6 +38,7 @@ export class Bagging extends BaseEstimator {
   }
 
   async fit(x: tf.Tensor<tf.Rank>, y: tf.Tensor<tf.Rank>): Promise<Bagging> {
+    this.trees = [];
     const nSample = Math.round(x.shape[0] * this.ratio);
     for (const _ of [...Array(this.nTrees).keys()]) {
       const allIndex = [...Array(x.shape[0]).keys()];

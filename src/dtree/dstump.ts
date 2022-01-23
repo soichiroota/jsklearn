@@ -4,10 +4,14 @@ import * as entropy from './entropy';
 import { ZeroRule } from '../zeror';
 import { Linear } from '../linear';
 import { BaseEstimator } from '../base';
+import { WeightedZeroRule } from './boosting/weighted';
 
 export class DecisionStump extends BaseEstimator {
   leaf: typeof ZeroRule | typeof Linear;
-  metric: (y: tf.Tensor<tf.Rank>) => Promise<number>;
+  metric: (
+    y: tf.Tensor<tf.Rank>,
+    weight?: tf.Tensor<tf.Rank>
+  ) => Promise<number>;
   left: BaseEstimator;
   right: BaseEstimator;
   featIndex: number;
@@ -48,7 +52,9 @@ export class DecisionStump extends BaseEstimator {
 
   async makeLoss(
     y1: tf.Tensor<tf.Rank>,
-    y2: tf.Tensor<tf.Rank>
+    y2: tf.Tensor<tf.Rank>,
+    l?: tf.Tensor<tf.Rank>,
+    r?: tf.Tensor<tf.Rank>
   ): Promise<number> {
     if (y1.shape[0] == 0 || y2.shape[0] == 0) {
       return Infinity;
@@ -73,7 +79,7 @@ export class DecisionStump extends BaseEstimator {
       const feat = x2d.slice([0, i], [x2d.shape[0], 1]);
       for (const val of await feat.flatten().array()) {
         const [l, r] = await this.makeSplit(feat, val);
-        const loss = await this.makeLoss(y.gather(l), y.gather(r));
+        const loss = await this.makeLoss(y.gather(l), y.gather(r), l, r);
         if (score > loss) {
           score = loss;
           left = l;
