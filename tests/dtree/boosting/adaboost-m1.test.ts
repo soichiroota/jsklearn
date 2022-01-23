@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 
-import * as classificationData from '../../src/data/classification-data';
-import { AdaBoostM1 } from '../../src/dtree/boosting/adaboost-m1';
+import * as classificationData from '../../../src/data/classification-data';
+import { AdaBoostM1 } from '../../../src/dtree/boosting/adaboost-m1';
 
 describe('AdaBoostM1 classification test', (): void => {
   const [xTrain, yTrain, xTest, yTest] = classificationData.getIrisData(0.15);
@@ -18,7 +18,7 @@ describe('AdaBoostM1 classification test', (): void => {
   });
 
   test('toString', async (): Promise<void> => {
-    const model: AdaBoostM1 = new AdaBoostM1(2, 9);
+    const model: AdaBoostM1 = new AdaBoostM1(2, 10);
     await model.fit(xTrain, yTrain);
     const result = await model.toString();
     expect(result).toContain('Tensor');

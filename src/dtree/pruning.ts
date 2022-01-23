@@ -234,11 +234,9 @@ export class PrunedTree extends DecisionTree {
         getscore(this, score);
         if (score.length > 0) {
           const i = Math.round(score.length * this.critical);
-          const sortedScore = tf.topk(score, score.length, true);
+          const sortedScore = tf.topk(score, score.length, false).values;
           const scoreMax = (
-            await sortedScore.values
-              .slice(Math.min(i, score.length - 1), 1)
-              .buffer()
+            await sortedScore.slice(Math.min(i, score.length - 1), 1).buffer()
           ).get(0);
           criticalscore(this, scoreMax);
         }

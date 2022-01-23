@@ -79,7 +79,7 @@ export class AdaBoostM1 extends BaseEstimator {
   }
 
   async toString(): Promise<string> {
-    if (this.beta === null) throw 'AdaBoost must be fitted.';
+    if (this.beta === null) return 'null';
     const s: string[] = [];
     let w = tf.log(this.beta.pow(-1));
     if ((await w.sum().buffer()).get(0) === 0) {
